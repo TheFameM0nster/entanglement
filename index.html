@@ -2,256 +2,201 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Concept Web</title>
-
+<title>Concept Web with Lines</title>
 <style>
-body {
-    margin: 0;
-    background: #03030c;
-    color: white;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-    width: 100vw;
-    height: 100vh;
-}
+    body { margin: 0; background: #050505; color: white; font-family: Arial, sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
+    #canvas { position: relative; width: 100vw; height: 100vh; display: grid; place-items: center; }
 
-#canvas {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-}
+    /* Centered container to hold all scaled elements */
+    #graph-container { position: relative; width: 100vw; height: 100vh; max-width: 1400px; max-height: 900px; transform-origin: center center; transition: transform 0.2s; }
 
-/* Base styling for main concept nodes */
-.node {
-    position: absolute;
-    width: 220px;
-    height: 220px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 10;
-    background: rgba(3, 3, 12, 0.85);
-}
+    /* SVG overlay for lines (must be behind nodes) */
+    #lines-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+    .connect-line { stroke: rgba(132, 219, 255, 0.4); stroke-width: 1.5px; fill: none; opacity: 0; transition: opacity 0.35s ease; }
+    .show .connect-line { opacity: 1; }
 
-.entanglement {
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    border: 3px solid #bb66ff;
-    box-shadow: 0 0 30px #bb66ff;
-    color: #e0b0ff;
-}
+    .node { position: absolute; border-radius: 50%; display: flex; justify-content: center; align-items: center; text-align: center; font-size: 2vw; font-weight: bold; cursor: pointer; z-index: 10; background: rgba(5, 5, 5, 0.85); box-sizing: border-box; transition: transform 0.3s ease; }
+    .node:hover { transform: scale(1.05); }
 
-.superposition {
-    left: 20%;
-    top: 22%;
-    transform: translate(-50%, -50%);
-    border: 3px solid #33aaff;
-    box-shadow: 0 0 20px #33aaff;
-    color: #8cd0ff;
-}
+    .superposition { left: 10%; top: 15%; border: 3px solid #33aaff; box-shadow: 0 0 20px #33aaff; color: #8cd0ff; }
+    .entanglement { left: 50%; top: 50%; transform: translate(-50%, -50%); border: 3px solid #bb66ff; box-shadow: 0 0 30px #bb66ff; color: #e0b0ff; }
+    /* Hover over Entanglement shifts positions of Superposition and Symbiosis to avoid coverage */
+    #canvas.focus-entanglement .node.superposition { transform: translate(-2vw, -2vw); }
+    #canvas.focus-entanglement .node.symbiosis { transform: translate(-50%, calc(-50% + 2vw)); }
 
-.valence {
-    left: 75%;
-    top: 22%;
-    transform: translate(-50%, -50%);
-    border: 3px solid #55ff55;
-    box-shadow: 0 0 20px #55ff55;
-    color: #a3ffa3;
-}
+    .valence { right: 10%; top: 15%; border: 3px solid #55ff55; box-shadow: 0 0 20px #55ff55; color: #a3ffa3; }
+    .symbiosis { left: 50%; top: 85%; transform: translate(-50%, -50%); border: 3px solid gold; box-shadow: 0 0 20px gold; color: #ffea75; }
 
-.symbiosis {
-    left: 72%;
-    top: 72%;
-    transform: translate(-50%, -50%);
-    border: 3px solid gold;
-    box-shadow: 0 0 20px gold;
-    color: #ffea75;
-}
+    .bubble { position: absolute; border-radius: 50%; display: flex; justify-content: center; align-items: center; text-align: center; font-size: 14px; line-height: 1.3; background: rgba(5, 5, 15, 0.9); opacity: 0; pointer-events: none; transition: opacity 0.35s ease, transform 0.35s ease; transform: scale(0.92); z-index: 20; box-sizing: border-box; }
+    .node-target.show .bubble { opacity: 1; transform: scale(1); pointer-events: auto; }
 
-/* Base styling for the detailed descriptive bubbles */
-.bubble {
-    position: absolute;
-    width: 150px;
-    height: 150px;
-    padding: 12px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    font-size: 12px;
-    line-height: 1.3;
-    background: rgba(5, 5, 15, 0.9);
-    
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.35s ease, transform 0.35s ease;
-    transform: scale(0.92);
-    z-index: 5;
-}
+    .supBubble { border: 1.5px solid rgba(51, 170, 255, 0.7); }
+    .entBubble { border: 1.5px solid rgba(187, 102, 255, 0.7); }
+    .valBubble { border: 1.5px solid rgba(85, 255, 85, 0.7); }
+    .symBubble { border: 1.5px solid rgba(255, 215, 0, 0.7); }
 
-/* Specific border colors per category */
-.supBubble { border: 1.5px solid #33aaff; }
-.entBubble { border: 1.5px solid #bb66ff; }
-.valBubble { border: 1.5px solid #55ff55; }
-.symBubble { border: 1.5px solid gold; }
-
-/* Info Banner */
-.info-banner {
-    position: absolute;
-    top: 25px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 14px;
-    color: #aaa;
-    border: 1px solid #444;
-    padding: 8px 16px;
-    border-radius: 6px;
-    background: rgba(20,20,30,0.6);
-}
-.info-icon {
-    border: 1.5px solid #aaa;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 11px;
-    font-weight: bold;
-}
+    .info-banner { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; font-size: 14px; color: #aaa; border: 1px solid #444; padding: 8px 16px; border-radius: 6px; background: rgba(20,20,30,0.6); z-index: 30; }
+    .info-icon { border: 1.5px solid #aaa; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; justify-content: center; align-items: center; font-size: 11px; font-weight: bold; }
 </style>
 </head>
-
 <body>
+    <div class="info-banner"><span class="info-icon">i</span> Hover over a concept to explore its meanings.</div>
+    <div id="canvas">
+        <div id="graph-container">
+            <svg id="lines-svg"></svg>
+            <div class="node superposition" id="superposition" data-bubble-class="supBubble">Superposition</div>
+            <div class="node entanglement" id="entanglement" data-bubble-class="entBubble">Entanglement</div>
+            <div class="node valence" id="valence" data-bubble-class="valBubble">Valence</div>
+            <div class="node symbiosis" id="symbiosis" data-bubble-class="symBubble">Symbiosis</div>
 
-<div class="info-banner">
-    <span class="info-icon">i</span> Hover over a concept to explore its meanings.
-</div>
+            <div class="bubble supBubble" style="left: -1%; top: 5%; width: 130px; height: 130px;">Physical systems can exist in multiple states or configurations</div>
+            <div class="bubble supBubble" style="left: -1%; top: 25%; width: 110px; height: 110px;">An equation that has more than one solution</div>
+            <div class="bubble supBubble" style="left: -1%; top: 45%; width: 140px; height: 140px;">Re: Entanglement: situations sufficiently intricate may require more than one solution</div>
+            <div class="bubble supBubble" style="left: 6%; top: 65%; width: 120px; height: 120px;">Constructive and destructive interference in waves</div>
+            <div class="bubble supBubble" style="left: 21%; top: 68%; width: 130px; height: 130px;">System only maintains superposition while it is unobserved</div>
+            <div class="bubble supBubble" style="left: 31%; top: 58%; width: 130px; height: 130px;">When it interacts with the environment it collapses...</div>
+            <div class="bubble supBubble" style="left: 32%; top: 38%; width: 140px; height: 140px;">Entangled situations–connections, relationships–are pure in isolation</div>
+            <div class="bubble supBubble" style="left: 27%; top: 20%; width: 110px; height: 110px;">External influences create drastic changes</div>
 
-<div id="canvas">
+            <div class="bubble entBubble" style="left: 45%; top: 28%; width: 110px; height: 110px;">Compromising situation</div>
+            <div class="bubble entBubble" style="left: 56%; top: 29%; width: 110px; height: 110px;">Intricate Involvement</div>
+            <div class="bubble entBubble" style="left: 59%; top: 48%; width: 110px; height: 110px;">Inextricably Linked</div>
+            <div class="bubble entBubble" style="left: 53%; top: 66%; width: 130px; height: 130px;">The dance of entanglement materializes not from any one particle but connections.</div>
+            <div class="bubble entBubble" style="left: 41%; top: 76%; width: 130px; height: 130px;">The more intertwined, the more difference perspective makes</div>
+            <div class="bubble entBubble" style="left: 38%; top: 58%; width: 130px; height: 130px;">Viewer sees depends on how they look at the particles</div>
+            <div class="bubble entBubble" style="left: 31%; top: 67%; width: 130px; height: 130px;">State of one particle instantly dictates the state of the other</div>
+            <div class="bubble entBubble" style="left: 38%; top: 38%; width: 110px; height: 110px;">State of being Intertwined</div>
 
-    <div class="node superposition" id="superposition">Superposition</div>
-    <div class="node entanglement" id="entanglement">Entanglement</div>
-    <div class="node valence" id="valence">Valence</div>
-    <div class="node symbiosis" id="symbiosis">Symbiosis</div>
+            <div class="bubble valBubble" style="left: 88%; top: 5%; width: 110px; height: 110px;">Capacity to connect or react</div>
+            <div class="bubble valBubble" style="left: 90%; top: 20%; width: 100px; height: 100px;">Positive or negative emotions</div>
+            <div class="bubble valBubble" style="left: 89%; top: 38%; width: 110px; height: 110px;">Anticipated satisfaction</div>
+            <div class="bubble valBubble" style="left: 85%; top: 56%; width: 130px; height: 130px;">Subjective value of entity in life space</div>
+            <div class="bubble valBubble" style="left: 74%; top: 48%; width: 130px; height: 130px;">Anticipated satisfaction morphed by factors</div>
+            <div class="bubble valBubble" style="left: 77%; top: 6%; width: 110px; height: 110px;">Stay focused on the right thing?</div>
 
-
-    <div class="bubble supBubble" style="left: 7%; top: 5%;">
-        Physical systems can exist in multiple states or configurations
+            <div class="bubble symBubble" style="left: 83%; top: 76%; width: 110px; height: 110px;">Close, long term relationship.</div>
+            <div class="bubble symBubble" style="left: 65%; top: 83%; width: 140px; height: 140px;">Spectrum of valences dictated by species...</div>
+        </div>
     </div>
-    <div class="bubble supBubble" style="left: 2%; top: 25%;">
-        An equation that has more than one solution
-    </div>
-    <div class="bubble supBubble" style="left: 2%; top: 48%;">
-        Re: Entanglement: situations sufficiently intricate may require more than one solution
-    </div>
-    <div class="bubble supBubble" style="left: 8%; top: 70%;">
-        Constructive and destructive interference in waves
-    </div>
-    <div class="bubble supBubble" style="left: 22%; top: 74%;">
-        System only maintains superposition while it is unobserved
-    </div>
-    <div class="bubble supBubble" style="left: 34%; top: 68%;">
-        When it interacts with the environment it collapses, and particles settle into a position
-    </div>
-    <div class="bubble supBubble" style="left: 36%; top: 46%;">
-        Entangled situations–emotional connections, inescapable relationships–are pure in isolation
-    </div>
-    <div class="bubble supBubble" style="left: 30%; top: 26%;">
-        Exposure to external influences create drastic changes
-    </div>
-
-
-    <div class="bubble entBubble" style="left: 45%; top: 23%;">
-        Compromising situation
-    </div>
-    <div class="bubble entBubble" style="left: 56%; top: 24%;">
-        Intricate Involvement
-    </div>
-    <div class="bubble entBubble" style="left: 61%; top: 45%;">
-        Inextricably Linked
-    </div>
-    <div class="bubble entBubble" style="left: 53%; top: 65%;">
-        The dance of entanglement materializes not from any one particle but from the connections between them.
-    </div>
-    <div class="bubble entBubble" style="left: 42%; top: 78%;">
-        The more intertwined the situation, the more difference perspective can make
-    </div>
-    <div class="bubble entBubble" style="left: 37%; top: 57%;">
-        Even in entangled particles, what the viewer sees depends on how they look at the particles
-    </div>
-    <div class="bubble entBubble" style="left: 27%; top: 64%;">
-        Physical state of one particle instantly dictates the state of the other
-    </div>
-    <div class="bubble entBubble" style="left: 35%; top: 34%;">
-        State of being Intertwined
-    </div>
-
-
-    <div class="bubble valBubble" style="left: 86%; top: 4%;">
-        Capacity to connect or react
-    </div>
-    <div class="bubble valBubble" style="left: 89%; top: 22%;">
-        Positive or negative values of emotions
-    </div>
-    <div class="bubble valBubble" style="left: 87%; top: 42%;">
-        Anticipated satisfaction
-    </div>
-    <div class="bubble valBubble" style="left: 83%; top: 60%;">
-        Subjective value of an event, object, person, or other entity in the life space of an individual
-    </div>
-    <div class="bubble valBubble" style="left: 70%; top: 45%;">
-        Anticipated satisfaction is morphed by internal and external factors
-    </div>
-    <div class="bubble valBubble" style="left: 71%; top: 3%;">
-        How do we stay focused on the right thing?
-    </div>
-
-
-    <div class="bubble symBubble" style="left: 84%; top: 80%;">
-        Close, long term relationship two different species.
-    </div>
-    <div class="bubble symBubble" style="left: 65%; top: 88%;">
-        Not inherently positive or negative, but a spectrum of valences dictated by the involved species and the balance of benefits
-    </div>
-
-</div>
-
 <script>
-function attachHover(nodeId, bubbleClass) {
-    const node = document.getElementById(nodeId);
-    
-    node.addEventListener('mouseenter', () => {
-        document.querySelectorAll("." + bubbleClass).forEach(b => {
-            b.style.opacity = "1";
-            b.style.transform = "scale(1)";
-        });
+    const canvas = document.getElementById('canvas');
+    const container = document.getElementById('graph-container');
+    const svg = document.getElementById('lines-svg');
+    const nodes = document.querySelectorAll('.node');
+
+    // Dynamically size nodes based on main word length
+    nodes.forEach(node => {
+        const textLen = node.textContent.trim().length;
+        const size = 150 + (textLen * 3.5); // size relative to text length
+        node.style.width = `${size}px`;
+        node.style.height = `${size}px`;
     });
 
-    node.addEventListener('mouseleave', () => {
-        document.querySelectorAll("." + bubbleClass).forEach(b => {
-            b.style.opacity = "0";
-            b.style.transform = "scale(0.92)";
+    // Handle responsiveness: Scale the container if the window gets too small
+    function handleResize() {
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+        const baseW = 1400; // Optimal width
+        const baseH = 900;  // Optimal height
+        
+        const scaleW = winW / baseW;
+        const scaleH = winH / baseH;
+        
+        // Use the smaller scale factor, capped at 1
+        const finalScale = Math.min(scaleW, scaleH, 1);
+        
+        // Slightly reduce the effective scale to provide buffer around edges
+        container.style.transform = `scale(${finalScale * 0.95})`;
+    }
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Init
+
+    // Generate connecting lines dynamically on load
+    function drawLines() {
+        svg.innerHTML = ''; // Clear
+        const connections = [
+            ['entanglement', 'superposition'],
+            ['superposition', 'valence'],
+            ['valence', 'entanglement'],
+            ['entanglement', 'symbiosis'],
+            ['valence', 'symbiosis'],
+        ];
+
+        // Connect main nodes to each other
+        connections.forEach(([idA, idB]) => {
+            createLineBetweenElements(document.getElementById(idA), document.getElementById(idB), false, "mainNodeLink");
+        });
+
+        // Connect nodes to their bubbles
+        nodes.forEach(node => {
+            const bubbleClass = node.dataset.bubbleClass;
+            const bubbles = document.querySelectorAll(`.${bubbleClass}`);
+            bubbles.forEach(bubble => {
+                createLineBetweenElements(node, bubble, true);
+            });
+        });
+    }
+
+    function createLineBetweenElements(elemA, elemB, isBubbleLink = false, typeClass = '') {
+        const rectA = elemA.getBoundingClientRect();
+        const rectB = elemB.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        // Get centers relative to graph-container
+        const x1 = (rectA.left + rectA.width / 2 - containerRect.left);
+        const y1 = (rectA.top + rectA.height / 2 - containerRect.top);
+        const x2 = (rectB.left + rectB.width / 2 - containerRect.left);
+        const y2 = (rectB.top + rectB.height / 2 - containerRect.top);
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+
+        // Add correct classing for targeting and styling
+        if (isBubbleLink) {
+            line.classList.add('connect-line', elemB.classList[1]); // e.g. "entBubble"
+        } else {
+            line.classList.add('connect-line', 'always-show'); // Main links always visible (mostly)
+            line.style.opacity = 1;
+        }
+
+        svg.appendChild(line);
+    }
+
+    // Delayed start to ensure positions/scaling are finalized
+    setTimeout(drawLines, 50);
+
+    // Hover functionality
+    nodes.forEach(node => {
+        const bubbleClass = node.dataset.bubbleClass;
+
+        node.addEventListener('mouseenter', () => {
+            // Signal canvas for dynamic adjustments (shift neighbors)
+            if (node.id === 'entanglement') canvas.classList.add('focus-entanglement');
+            
+            // Show associated bubbles and their lines
+            document.querySelectorAll(`.${bubbleClass}`).forEach(elem => {
+                elem.classList.add('show');
+                // The element is added to the "parent" node's display via class change
+                node.closest('div').classList.add('show');
+            });
+            // Show links of this node to neighbors
+            svg.querySelectorAll('.connect-line').forEach(line => {
+               if(line.getAttribute('x1') == parseFloat(node.style.left)) line.classList.add('highlight');
+            });
+        });
+
+        node.addEventListener('mouseleave', () => {
+            if (node.id === 'entanglement') canvas.classList.remove('focus-entanglement');
+
+            document.querySelectorAll(`.${bubbleClass}`).forEach(elem => {
+                elem.classList.remove('show');
+                node.closest('div').classList.remove('show');
+            });
         });
     });
-}
-
-// Hooking up hover rules for all 4 distinct groups
-attachHover("superposition", "supBubble");
-attachHover("entanglement", "entBubble");
-attachHover("valence", "valBubble");
-attachHover("symbiosis", "symBubble");
 </script>
-
 </body>
 </html>
