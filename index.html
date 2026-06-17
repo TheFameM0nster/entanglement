@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Word Prototype</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 50px auto;
+            line-height: 1.6;
+        }
+
+        .hidden {
+            display: none;
+            margin-left: 20px;
+            color: #444;
+        }
+
+        .clickable {
+            color: blue;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<p>
+    The <span class="clickable" onclick="toggle('word1')">forest</span>
+    contains many secrets.
+</p>
+
+<div id="word1" class="hidden">
+    Ancient trees, hidden streams, and strange creatures.
+</div>
+
+<script>
+function toggle(id) {
+    let element = document.getElementById(id);
+
+    if (element.style.display === "block") {
+        element.style.display = "none";
+    } else {
+        element.style.display = "block";
+    }
+}
+</script>
+
+</body>
+</html>
