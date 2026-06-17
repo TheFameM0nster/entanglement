@@ -182,4 +182,122 @@ body {
 
     <div class="bubble valBubble" style="left: 82%; top: 6%;">Capacity to connect or react</div>
     <div class="bubble valBubble" style="left: 86%; top: 24%;">Positive or negative values of emotions</div>
-    <div
+    <div class="bubble valBubble" style="left: 84%; top: 44%;">Anticipated satisfaction</div>
+    <div class="bubble valBubble" style="left: 78%; top: 60%;">Subjective value of an event, object, person, or other entity in the life space of an individual</div>
+    <div class="bubble valBubble" style="left: 66%; top: 48%;">Anticipated satisfaction is morphed by internal and external factors</div>
+    <div class="bubble valBubble" style="left: 68%; top: 8%;">How do we stay focused on the right thing?</div>
+
+
+    <div class="bubble symBubble" style="left: 65%; top: 75%;">Close, long term relationship two different species.</div>
+    <div class="bubble symBubble" style="left: 28%; top: 75%;">Not inherently positive or negative, but a spectrum of valences dictated by the involved species and the balance of benefits</div>
+
+</div>
+
+<script>
+// --- LINE DRAWING LOGIC ---
+const svgLayer = document.getElementById('line-layer');
+
+function getCenter(element) {
+    const rect = element.getBoundingClientRect();
+    return {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+    };
+}
+
+function createLine(idA, idB, isBubble = false, bubbleClass = '') {
+    const elA = document.getElementById(idA);
+    const elB = typeof idB === 'string' ? document.getElementById(idB) : idB;
+    
+    if (!elA || !elB) return;
+
+    const centerA = getCenter(elA);
+    const centerB = getCenter(elB);
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", centerA.x);
+    line.setAttribute("y1", centerA.y);
+    line.setAttribute("x2", centerB.x);
+    line.setAttribute("y2", centerB.y);
+    line.setAttribute("stroke", "rgba(132, 219, 255, 0.3)"); // Light blue, semi-transparent
+    line.setAttribute("stroke-width", "2");
+    
+    if (isBubble) {
+        // Hide bubble lines by default, tag them with their parent's class
+        line.style.opacity = "0";
+        line.style.transition = "opacity 0.35s ease";
+        line.classList.add(bubbleClass + '-line');
+    }
+
+    svgLayer.appendChild(line);
+}
+
+function drawAllLines() {
+    svgLayer.innerHTML = ''; // Clear existing lines
+
+    // 1. Draw persistent lines between main concepts
+    createLine('entanglement', 'superposition');
+    createLine('entanglement', 'valence');
+    createLine('entanglement', 'symbiosis');
+    createLine('superposition', 'valence');
+    createLine('valence', 'symbiosis');
+
+    // 2. Draw hideable lines for bubbles
+    const bubbleGroups = [
+        { parent: 'superposition', class: 'supBubble' },
+        { parent: 'entanglement', class: 'entBubble' },
+        { parent: 'valence', class: 'valBubble' },
+        { parent: 'symbiosis', class: 'symBubble' }
+    ];
+
+    bubbleGroups.forEach(group => {
+        const bubbles = document.querySelectorAll('.' + group.class);
+        bubbles.forEach(bubble => {
+            createLine(group.parent, bubble, true, group.class);
+        });
+    });
+}
+
+// Draw lines initially and redraw if window resizes to keep them attached
+window.addEventListener('load', drawAllLines);
+window.addEventListener('resize', drawAllLines);
+
+
+// --- HOVER LOGIC ---
+function attachHover(nodeId, bubbleClass) {
+    const node = document.getElementById(nodeId);
+    
+    node.addEventListener('mouseenter', () => {
+        // Show bubbles
+        document.querySelectorAll("." + bubbleClass).forEach(b => {
+            b.style.opacity = "1";
+            b.style.transform = "scale(1)";
+        });
+        // Show connecting lines
+        document.querySelectorAll("." + bubbleClass + "-line").forEach(line => {
+            line.style.opacity = "1";
+        });
+    });
+
+    node.addEventListener('mouseleave', () => {
+        // Hide bubbles
+        document.querySelectorAll("." + bubbleClass).forEach(b => {
+            b.style.opacity = "0";
+            b.style.transform = "scale(0.92)";
+        });
+        // Hide connecting lines
+        document.querySelectorAll("." + bubbleClass + "-line").forEach(line => {
+            line.style.opacity = "0";
+        });
+    });
+}
+
+attachHover("superposition", "supBubble");
+attachHover("entanglement", "entBubble");
+attachHover("valence", "valBubble");
+attachHover("symbiosis", "symBubble");
+
+</script>
+
+</body>
+</html>
