@@ -1,49 +1,168 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Word Prototype</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 700px;
-            margin: 50px auto;
-            line-height: 1.6;
-        }
+<meta charset="UTF-8">
+<title>Concept Web</title>
 
-        .hidden {
-            display: none;
-            margin-left: 20px;
-            color: #444;
-        }
+<style>
+body {
+    margin: 0;
+    background: #050505;
+    color: white;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
 
-        .clickable {
-            color: blue;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-    </style>
+#canvas {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+.node {
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.entanglement {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border: 3px solid #bb66ff;
+    box-shadow: 0 0 30px #bb66ff;
+}
+
+.superposition {
+    left: 15%;
+    top: 20%;
+    border: 3px solid #33aaff;
+    box-shadow: 0 0 20px #33aaff;
+}
+
+.valence {
+    right: 15%;
+    top: 20%;
+    border: 3px solid #55ff55;
+    box-shadow: 0 0 20px #55ff55;
+}
+
+.symbiosis {
+    left: 50%;
+    bottom: 10%;
+    transform: translateX(-50%);
+    border: 3px solid gold;
+    box-shadow: 0 0 20px gold;
+}
+
+.line {
+    position: absolute;
+    background: white;
+    transform-origin: left center;
+    opacity: .5;
+}
+
+.bubble {
+    position: absolute;
+    width: 180px;
+    min-height: 100px;
+    padding: 15px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 14px;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s ease;
+}
+
+.show .bubble {
+    opacity: 1;
+}
+</style>
 </head>
+
 <body>
 
-<p>
-    The <span class="clickable" onclick="toggle('word1')">forest</span>
-    contains many secrets.
-</p>
+<div id="canvas">
 
-<div id="word1" class="hidden">
-    Ancient trees, hidden streams, and strange creatures.
+    <div class="node entanglement" id="entanglement">
+        Entanglement
+    </div>
+
+    <div class="node superposition" id="superposition">
+        Superposition
+    </div>
+
+    <div class="node valence" id="valence">
+        Valence
+    </div>
+
+    <div class="node symbiosis" id="symbiosis">
+        Symbiosis
+    </div>
+
+    <!-- Entanglement Bubbles -->
+
+    <div class="bubble entBubble"
+         style="left:58%;top:28%;border:2px solid #bb66ff;">
+         Compromising situation
+    </div>
+
+    <div class="bubble entBubble"
+         style="left:68%;top:38%;border:2px solid #bb66ff;">
+         Intricate involvement
+    </div>
+
+    <div class="bubble entBubble"
+         style="left:62%;top:62%;border:2px solid #bb66ff;">
+         State of being intertwined
+    </div>
+
+    <div class="bubble entBubble"
+         style="left:38%;top:62%;border:2px solid #bb66ff;">
+         Inextricably linked
+    </div>
+
+    <div class="bubble entBubble"
+         style="left:28%;top:38%;border:2px solid #bb66ff;">
+         Physical state of one particle instantly dictates the state of the other
+    </div>
+
 </div>
 
 <script>
-function toggle(id) {
-    let element = document.getElementById(id);
 
-    if (element.style.display === "block") {
-        element.style.display = "none";
-    } else {
-        element.style.display = "block";
-    }
+function attachHover(nodeId, bubbleClass){
+
+    const node = document.getElementById(nodeId);
+
+    node.addEventListener('mouseenter', () => {
+        document.querySelectorAll("." + bubbleClass)
+            .forEach(b => b.style.opacity = 1);
+    });
+
+    node.addEventListener('mouseleave', () => {
+        document.querySelectorAll("." + bubbleClass)
+            .forEach(b => b.style.opacity = 0);
+    });
+
 }
+
+attachHover("entanglement","entBubble");
+
 </script>
 
 </body>
